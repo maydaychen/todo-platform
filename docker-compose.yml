@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # 后端服务
+  todo-backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: todo-backend
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_HOST=${DATABASE_HOST}
+      - DATABASE_PORT=${DATABASE_PORT}
+      - DATABASE_NAME=${DATABASE_NAME}
+      - DATABASE_USER=${DATABASE_USER}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - ALIYUN_API_KEY=${ALIYUN_API_KEY}
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - todo-network
+    depends_on:
+      - todo-frontend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 前端服务
+  todo-frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    container_name: todo-frontend
+    restart: always
+    ports:
+      - "3457:80"
+    networks:
+      - todo-network
+
+networks:
+  todo-network:
+    driver: bridge

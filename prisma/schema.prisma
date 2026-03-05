@@ -1,0 +1,122 @@
+// Prisma Schema - 数据库模型定义
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+  
+  // MySQL 连接字符串格式：mysql://user:password@host:port/database
+  // 或者使用单独的配置项（Prisma 会自动拼接）
+}
+
+/// 用户表
+model User {
+  id           Int       @id @default(autoincrement())
+  username     String    @unique @db.VarChar(50)
+  passwordHash String    @db.VarChar(255)
+  email        String?   @db.VarChar(100)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  
+  tasks        Task[]
+  apiKeys      ApiKey[]
+  categories   Category[]
+  
+  @@map("users")
+}
+
+/// API Key 表
+model ApiKey {
+  id         Int       @id @default(autoincrement())
+  key        String    @unique @db.VarChar(255)
+  name       String?   @db.VarChar(100)
+  userId     Int
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  revoked    Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  
+  @@map("api_keys")
+}
+
+/// 任务表
+model Task {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title       String    @db.VarChar(200)
+  description String?   @db.Text
+  type        TaskType
+  status      TaskStatus @default(PENDING)
+  priority    TaskPriority @default(MEDIUM)
+  
+  dueDate     DateTime?
+  completedAt DateTime?
+  
+  categoryId  Int?
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  
+  parentId    Int?
+  parent      Task?     @relation("Subtasks", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Task[]    @relation("Subtasks")
+  
+  tags        String?   @db.Text // JSON 数组
+  metadata    String?   @db.Text // JSON，创作任务专用
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime? // 软删除
+  
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+  @@index([dueDate])
+  @@map("tasks")
+}
+
+enum TaskType {
+  DAILY
+  CREATIVE
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+/// 分类表
+model Category {
+  id        Int         @id @default(autoincrement())
+  userId    Int
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name      String      @db.VarChar(50)
+  type      CategoryType
+  color     String?     @db.VarChar(20)
+  icon      String?     @db.VarChar(50)
+  
+  createdAt DateTime    @default(now())
+  
+  tasks     Task[]
+  
+  @@unique([userId, name, type])
+  @@map("categories")
+}
+
+enum CategoryType {
+  DAILY
+  CREATIVE
+}
