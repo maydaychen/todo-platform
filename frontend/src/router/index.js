@@ -3,6 +3,9 @@ import Dashboard from '../views/Dashboard.vue'
 import DailyTasks from '../views/DailyTasks.vue'
 import CreativeTasks from '../views/CreativeTasks.vue'
 import Settings from '../views/Settings.vue'
+import AISettings from '../views/AISettings.vue'
+import Categories from '../views/Categories.vue'
+import CategoryPrompts from '../views/CategoryPrompts.vue'
 import Login from '../views/Login.vue'
 
 const routes = [
@@ -34,6 +37,24 @@ const routes = [
     path: '/settings',
     name: 'Settings',
     component: Settings,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/ai',
+    name: 'AISettings',
+    component: AISettings,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/categories',
+    name: 'Categories',
+    component: Categories,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/category-prompts',
+    name: 'CategoryPrompts',
+    component: CategoryPrompts,
     meta: { requiresAuth: true }
   }
 ]

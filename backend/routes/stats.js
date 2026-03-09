@@ -13,6 +13,7 @@ router.use(authenticateToken)
  */
 router.get('/summary', async (req, res) => {
   try {
+    console.log('统计 API - 用户 ID:', req.user.id)
     const userId = req.user.id
     
     // 并行查询所有统计数据
@@ -29,21 +30,21 @@ router.get('/summary', async (req, res) => {
         where: { userId, deletedAt: null }
       }),
       prisma.task.count({
-        where: { userId, status: 'pending', deletedAt: null }
+        where: { userId, status: 'PENDING', deletedAt: null }  // 大写
       }),
       prisma.task.count({
-        where: { userId, status: 'completed', deletedAt: null }
+        where: { userId, status: 'COMPLETED', deletedAt: null }  // 大写
       }),
       prisma.task.count({
-        where: { userId, type: 'daily', deletedAt: null }
+        where: { userId, type: 'DAILY', deletedAt: null }  // 大写
       }),
       prisma.task.count({
-        where: { userId, type: 'creative', deletedAt: null }
+        where: { userId, type: 'CREATIVE', deletedAt: null }  // 大写
       }),
       prisma.task.count({
         where: { 
           userId, 
-          status: 'pending',
+          status: 'PENDING',  // 大写
           dueDate: {
             gte: new Date(new Date().setHours(0, 0, 0, 0)),
             lt: new Date(new Date().setHours(23, 59, 59, 999))
@@ -54,7 +55,7 @@ router.get('/summary', async (req, res) => {
       prisma.task.count({
         where: { 
           userId, 
-          status: 'pending',
+          status: 'PENDING',  // 大写
           dueDate: { lt: new Date() },
           deletedAt: null
         }

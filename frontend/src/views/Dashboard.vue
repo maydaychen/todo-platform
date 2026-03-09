@@ -29,6 +29,18 @@
           <Icon name="settings" :size="20" />
           <span>设置</span>
         </router-link>
+        <router-link to="/ai" class="nav-item">
+          <Icon name="sparkles" :size="20" />
+          <span>AI 配置</span>
+        </router-link>
+        <router-link to="/categories" class="nav-item">
+          <Icon name="tag" :size="20" />
+          <span>分类管理</span>
+        </router-link>
+        <router-link to="/category-prompts" class="nav-item">
+          <Icon name="file" :size="20" />
+          <span>分类提示词</span>
+        </router-link>
       </nav>
     </aside>
 
@@ -122,10 +134,6 @@
             <Icon name="edit" :size="24" />
             <span>创作任务</span>
           </button>
-          <button class="action-btn" @click="viewAllTasks">
-            <Icon name="clipboard" :size="24" />
-            <span>查看全部</span>
-          </button>
         </div>
       </section>
 
@@ -162,7 +170,7 @@
         </div>
 
         <div v-if="loading" class="loading-state">
-          <div class="loading-spinner">⏳</div>
+          <Icon name="refresh" :size="48" class="loading-spinner" />
           <p>加载中...</p>
         </div>
 
@@ -181,12 +189,12 @@
           >
             <div 
               class="task-checkbox" 
-              :class="{ checked: task.status === 'completed' }"
+              :class="{ checked: task.status === 'COMPLETED' }"
               @click="toggleTask(task)"
             ></div>
             
             <div class="task-content">
-              <div class="task-title" :class="{ completed: task.status === 'completed' }">
+              <div class="task-title" :class="{ completed: task.status === 'COMPLETED' }">
                 {{ task.title }}
               </div>
               <div class="task-meta">
@@ -196,21 +204,13 @@
                 <span class="task-priority" :class="`priority-${task.priority}`">
                   {{ priorityText(task.priority) }}
                 </span>
-                <span class="task-tag">{{ task.type === 'daily' ? '📅 日常' : '✍️ 创作' }}</span>
+                <span class="task-tag">{{ task.type === 'DAILY' ? '📅 日常' : '✍️ 创作' }}</span>
               </div>
             </div>
             
             <div class="task-actions">
               <button class="task-action-btn" @click="editTask(task)" title="编辑">
                 <Icon name="pencil" :size="16" />
-              </button>
-              <button 
-                v-if="task.type === 'creative'" 
-                class="task-action-btn" 
-                @click="generateContent(task)" 
-                title="AI 生成"
-              >
-                <Icon name="sparkles" :size="16" />
               </button>
               <button class="task-action-btn delete" @click="deleteTask(task)" title="删除">
                 <Icon name="trash" :size="16" />
@@ -298,6 +298,26 @@
           </button>
         </div>
       </div>
+      
+      <!-- 删除确认弹窗 -->
+      <div v-if="showDeleteModal" class="modal-overlay" @click="showDeleteModal = false">
+        <div class="modal glass-card" @click.stop>
+          <div class="modal-header">
+            <Icon name="trash" :size="24" style="color: #f45c43;" />
+            <h2>确认删除</h2>
+          </div>
+          <div class="modal-body">
+            <p>确定要删除任务 <strong>"{{ taskToDelete?.title }}"</strong> 吗？</p>
+            <p class="text-secondary" style="font-size: 0.875rem; margin-top: 8px;">
+              此操作不可恢复
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-glass" @click="showDeleteModal = false">取消</button>
+            <button class="btn btn-danger" @click="confirmDelete">删除</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -321,7 +341,14 @@ const showNewTaskModal = ref(false)
 const showUserMenu = ref(false)
 
 // 统计数据
-const stats = ref({})
+const stats = ref({
+  total: 0,
+  byStatus: { pending: 0, completed: 0 },
+  byType: { creative: 0 },
+  completionRate: 0,
+  dueToday: 0,
+  overdue: 0
+})
 
 // 新任务表单
 const newTask = ref({
@@ -336,9 +363,9 @@ const newTask = ref({
 const userInitials = computed(() => {
   const user = authStore.user
   if (user && user.username) {
-    return user.username.substring(0, 2).toUpperCase()
+    return user.username.substring(0, 1).toUpperCase()
   }
-  return '用户'
+  return '用'
 })
 
 const recentTasks = computed(() => {
@@ -356,9 +383,10 @@ const recentTasks = computed(() => {
 // 方法
 const fetchStats = async () => {
   try {
+    const token = localStorage.getItem('todo_token')
     const response = await fetch('/api/stats/summary', {
       headers: {
-        'X-API-Key': authStore.apiKey
+        'Authorization': `Bearer ${token}`
       }
     })
     const data = await response.json()
@@ -402,8 +430,11 @@ const viewAllTasks = () => {
 }
 
 const toggleTask = async (task) => {
+  console.log('切换任务状态:', task.id, task.title, '当前状态:', task.status)
   await taskStore.toggleTaskStatus(task.id)
+  console.log('任务状态已切换')
   fetchStats()
+  fetchTasks()  // 重新获取任务列表，确保数据同步
 }
 
 const editTask = (task) => {
@@ -417,15 +448,28 @@ const editTask = (task) => {
   showNewTaskModal.value = true
 }
 
+const showDeleteModal = ref(false)
+const taskToDelete = ref(null)
+
 const generateContent = (task) => {
   // TODO: 调用 AI 生成内容
   alert('AI 生成功能开发中...')
 }
 
-const deleteTask = async (task) => {
-  if (confirm(`确定要删除任务"${task.title}"吗？`)) {
-    await taskStore.deleteTask(task.id)
+const deleteTask = (task) => {
+  console.log('删除任务:', task)
+  taskToDelete.value = task
+  showDeleteModal.value = true
+  console.log('弹窗状态:', showDeleteModal.value)
+}
+
+const confirmDelete = async () => {
+  if (taskToDelete.value) {
+    await taskStore.deleteTask(taskToDelete.value.id)
+    showDeleteModal.value = false
+    taskToDelete.value = null
     fetchStats()
+    fetchTasks()
   }
 }
 
@@ -505,24 +549,28 @@ onMounted(() => {
   flex-direction: column;
   gap: 24px;
   border-right: 1px solid rgba(255, 255, 255, 0.2);
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px;
-  font-size: 1.5rem;
+  gap: 12px;
+  padding: 16px 12px;
+  font-size: 1.25rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--theme-secondary) 0%, var(--theme-accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  white-space: nowrap;
 }
 
-.logo-icon {
-  font-size: 2rem;
-  -webkit-text-fill-color: initial;
+.logo :deep(.icon) {
+  flex-shrink: 0;
 }
 
 .nav-section {
@@ -636,7 +684,7 @@ onMounted(() => {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--theme-accent) 0%, var(--theme-secondary) 100%);
   color: #ffffff;
 }
 
@@ -659,7 +707,7 @@ onMounted(() => {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--theme-accent) 0%, var(--theme-secondary) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -804,7 +852,7 @@ onMounted(() => {
 }
 
 .task-card.creative {
-  border-left: 4px solid #667eea;
+  border-left: 4px solid var(--theme-accent);
 }
 
 .task-checkbox {
@@ -822,7 +870,7 @@ onMounted(() => {
 }
 
 .task-checkbox:hover {
-  border-color: #667eea;
+  border-color: var(--theme-accent);
   background: rgba(102, 126, 234, 0.2);
 }
 
@@ -897,7 +945,7 @@ onMounted(() => {
 .task-actions {
   display: flex;
   gap: 8px;
-  opacity: 0;
+  opacity: 1;  /* 始终可见 */
   transition: opacity 0.2s ease;
 }
 
@@ -937,8 +985,12 @@ onMounted(() => {
 }
 
 .loading-spinner {
-  font-size: 3rem;
   margin-bottom: 16px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .empty-state-icon {
@@ -965,7 +1017,9 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .modal {
@@ -1058,7 +1112,7 @@ onMounted(() => {
 
 .type-btn.active {
   background: rgba(255, 255, 255, 0.2);
-  border-color: #667eea;
+  border-color: var(--theme-accent);
   color: #ffffff;
 }
 
@@ -1076,7 +1130,7 @@ onMounted(() => {
 
 .form-input:focus {
   background: rgba(255, 255, 255, 0.15);
-  border-color: #667eea;
+  border-color: var(--theme-accent);
 }
 
 .form-input::placeholder {

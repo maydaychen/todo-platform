@@ -36,6 +36,25 @@ api.interceptors.request.use(
   }
 )
 
+// 响应拦截器 - 处理 401 错误
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // 清除本地存储
+      localStorage.removeItem('todo_token')
+      localStorage.removeItem('todo_api_key')
+      localStorage.removeItem('todo_user')
+      
+      // 跳转到登录页
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login'
+      }
+    }
+    return Promise.reject(error)
+  }
+)
+
 export const useTaskStore = defineStore('task', {
   state: () => ({
     tasks: [],
@@ -67,8 +86,8 @@ export const useTaskStore = defineStore('task', {
       return tasks
     },
     
-    dailyTasks: (state) => state.tasks.filter(t => t.type === 'daily'),
-    creativeTasks: (state) => state.tasks.filter(t => t.type === 'creative'),
+    dailyTasks: (state) => state.tasks.filter(t => t.type === 'DAILY' || t.type === 'daily'),
+    creativeTasks: (state) => state.tasks.filter(t => t.type === 'CREATIVE' || t.type === 'creative'),
     pendingTasks: (state) => state.tasks.filter(t => t.status !== 'completed'),
     completedTasks: (state) => state.tasks.filter(t => t.status === 'completed')
   },
@@ -101,15 +120,22 @@ export const useTaskStore = defineStore('task', {
     },
 
     async updateTask(id, taskData) {
+      console.log('updateTask - 请求:', id, taskData)
       try {
         const response = await api.put(`/tasks/${id}`, taskData)
+        console.log('updateTask - 响应数据:', response.data.data)
+        console.log('updateTask - 响应中的 status:', response.data.data.status)
+        // 直接替换整个任务对象，确保响应式更新
         const index = this.tasks.findIndex(t => t.id === id)
         if (index !== -1) {
-          this.tasks[index] = response.data.data
+          console.log('updateTask - 更新前 tasks[' + index + '].status:', this.tasks[index].status)
+          this.tasks[index] = { ...response.data.data }
+          console.log('updateTask - 更新后 tasks[' + index + '].status:', this.tasks[index].status)
         }
         return response.data.data
       } catch (error) {
-        console.error('Error updating task:', error)
+        console.error('updateTask - 错误:', error)
+        console.error('updateTask - 错误详情:', error.response?.data)
         throw error
       }
     },
@@ -126,15 +152,28 @@ export const useTaskStore = defineStore('task', {
 
     async toggleTaskStatus(id) {
       const task = this.tasks.find(t => t.id === id)
+      console.log('toggleTaskStatus - 找到任务:', task)
       if (task) {
         const newStatus = task.status === 'completed' ? 'pending' : 'completed'
-        return await this.updateTask(id, { status: newStatus })
+        console.log('toggleTaskStatus - 新状态:', newStatus)
+        try {
+          const result = await this.updateTask(id, { status: newStatus })
+          console.log('toggleTaskStatus - 更新结果:', result)
+          return result
+        } catch (error) {
+          console.error('toggleTaskStatus - 更新失败:', error)
+          throw error
+        }
       }
     },
 
-    async generateOutline(taskId, title) {
+    async generateOutline(taskId, title, categoryId = null) {
       try {
-        const response = await api.post('/generate/outline', { taskId, title })
+        const response = await api.post('/generate/outline', { 
+          taskId, 
+          title,
+          categoryId
+        })
         return response.data.data
       } catch (error) {
         console.error('Error generating outline:', error)
@@ -142,12 +181,13 @@ export const useTaskStore = defineStore('task', {
       }
     },
 
-    async generateArticle(taskId, outline, style = 'casual') {
+    async generateArticle(taskId, outline, style = 'casual', categoryId = null) {
       try {
         const response = await api.post('/generate/article', { 
           taskId, 
           outline,
-          style 
+          style,
+          categoryId
         })
         return response.data.data
       } catch (error) {

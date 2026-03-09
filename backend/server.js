@@ -12,6 +12,8 @@ const authRoutes = require('./routes/auth')
 const taskRoutes = require('./routes/tasks')
 const generateRoutes = require('./routes/generate')
 const statsRoutes = require('./routes/stats')
+const aiRoutes = require('./routes/ai')
+const categoriesRoutes = require('./routes/categories')
 
 // 导入数据库
 const { prisma } = require('./config/db')
@@ -73,6 +75,11 @@ app.use('/api/auth', authRoutes)
 app.use('/api/tasks', taskRoutes)
 app.use('/api/generate', generateRoutes)
 app.use('/api/stats', statsRoutes)
+app.use('/api/ai', aiRoutes)
+app.use('/api/categories', categoriesRoutes)
+app.use('/api/reminders', require('./routes/reminders'))
+app.use('/api/export', require('./routes/export'))
+app.use('/api/export-nas', require('./routes/export-nas'))
 
 // 404 处理
 app.use((req, res) => {

@@ -15,7 +15,7 @@ router.use(authenticateToken)
  */
 router.post('/outline', async (req, res) => {
   try {
-    const { taskId, title, category } = req.body
+    const { taskId, title, categoryId } = req.body
     
     if (!title) {
       return res.status(400).json({ 
@@ -24,22 +24,98 @@ router.post('/outline', async (req, res) => {
       })
     }
     
-    // 构建 Prompt
-    const prompt = `请为以下主题生成一个文章大纲：
+    // 获取分类信息和提示词
+    let categoryPrompt = ''
+    let categoryName = ''
     
+    if (categoryId) {
+      const category = await prisma.category.findFirst({
+        where: { 
+          id: parseInt(categoryId),
+          userId: req.user.id
+        }
+      })
+      
+      if (category) {
+        categoryName = category.name
+        
+        // 检查分类是否有配置提示词
+        if (!category.prompt || category.prompt.trim() === '') {
+          return res.status(400).json({
+            success: false,
+            error: `分类「${category.name}」未配置提示词`,
+            message: '请先为该分类配置 AI 提示词，或选择其他分类',
+            needPrompt: true,
+            categoryId: category.id,
+            categoryName: category.name
+          })
+        }
+        
+        categoryPrompt = category.prompt
+      }
+    }
+    
+    // 如果没有分类或分类没有提示词，返回错误
+    if (!categoryPrompt) {
+      return res.status(400).json({
+        success: false,
+        error: '未配置分类提示词',
+        message: '请先为任务选择分类并配置 AI 提示词',
+        needPrompt: true
+      })
+    }
+    
+    // 构建 Prompt
+    let prompt = ''
+    
+    if (categoryPrompt) {
+      // 使用分类专用提示词
+      prompt = `${categoryPrompt}
+
+请根据以上要求，为以下主题生成一个文章大纲：
+
 主题：${title}
-${category ? `分类：${category}` : ''}
+${categoryName ? `分类：${categoryName}` : ''}
 
 要求：
 1. 生成 3-6 个主要章节
 2. 每个章节用简短的标题概括
-3. 适合${category === '技术博客' ? '技术读者' : '普通读者'}阅读
-4. 只返回大纲章节标题，用 JSON 数组格式，例如：["引言", "第一章", "第二章", "总结"]`
+3. 只返回大纲章节标题，用 JSON 数组格式，例如：["引言", "第一章", "第二章", "总结"]`
+    } else {
+      // 使用默认提示词
+      prompt = `请为以下主题生成一个文章大纲：
+    
+主题：${title}
+${categoryName ? `分类：${categoryName}` : ''}
 
+要求：
+1. 生成 3-6 个主要章节
+2. 每个章节用简短的标题概括
+3. 只返回大纲章节标题，用 JSON 数组格式，例如：["引言", "第一章", "第二章", "总结"]`
+    }
+    
+    // 获取用户的 AI 配置
+    const aiConfig = await prisma.aiConfig.findFirst({
+      where: {
+        userId: req.user.id,
+        provider: 'aliyun',
+        enabled: true
+      }
+    })
+    
+    if (!aiConfig || !aiConfig.apiKey) {
+      return res.status(400).json({
+        success: false,
+        error: '未配置阿里云 API Key，请先在 AI 配置页面设置'
+      })
+    }
+    
     // 调用 AI
     const result = await generateWithQwen(prompt, {
       temperature: 0.7,
-      maxTokens: 500
+      maxTokens: 500,
+      model: aiConfig.model || 'qwen3.5-plus',
+      apiKey: aiConfig.apiKey
     })
     
     // 尝试解析 JSON
@@ -92,7 +168,7 @@ ${category ? `分类：${category}` : ''}
  */
 router.post('/article', async (req, res) => {
   try {
-    const { taskId, outline, style = 'casual', wordCount = 2000 } = req.body
+    const { taskId, outline, style = 'casual', wordCount = 1000, categoryId } = req.body
     
     if (!outline || !Array.isArray(outline) || outline.length === 0) {
       return res.status(400).json({ 
@@ -105,6 +181,10 @@ router.post('/article', async (req, res) => {
     let taskTitle = ''
     let taskDescription = ''
     
+    // 获取分类提示词
+    let categoryPrompt = ''
+    let categoryName = ''
+    
     if (taskId) {
       const task = await prisma.task.findFirst({
         where: { 
@@ -116,11 +196,100 @@ router.post('/article', async (req, res) => {
       if (task) {
         taskTitle = task.title
         taskDescription = task.description || ''
+        
+        // 获取任务的分类
+        if (task.categoryId) {
+          const category = await prisma.category.findFirst({
+            where: { 
+              id: task.categoryId,
+              userId: req.user.id
+            }
+          })
+          
+          if (category) {
+            categoryName = category.name
+            
+            // 检查分类是否有配置提示词
+            if (!category.prompt || category.prompt.trim() === '') {
+              return res.status(400).json({
+                success: false,
+                error: `分类「${category.name}」未配置提示词`,
+                message: '请先为该分类配置 AI 提示词，或选择其他分类',
+                needPrompt: true,
+                categoryId: category.id,
+                categoryName: category.name
+              })
+            }
+            
+            categoryPrompt = category.prompt
+          }
+        }
       }
     }
     
+    // 如果提供了 categoryId 但没有 taskId，直接获取分类提示词
+    if (!categoryPrompt && categoryId) {
+      const category = await prisma.category.findFirst({
+        where: { 
+          id: parseInt(categoryId),
+          userId: req.user.id
+        }
+      })
+      
+      if (category) {
+        categoryName = category.name
+        
+        // 检查分类是否有配置提示词
+        if (!category.prompt || category.prompt.trim() === '') {
+          return res.status(400).json({
+            success: false,
+            error: `分类「${category.name}」未配置提示词`,
+            message: '请先为该分类配置 AI 提示词，或选择其他分类',
+            needPrompt: true,
+            categoryId: category.id,
+            categoryName: category.name
+          })
+        }
+        
+        categoryPrompt = category.prompt
+      }
+    }
+    
+    // 如果没有分类或分类没有提示词，返回错误
+    if (!categoryPrompt) {
+      return res.status(400).json({
+        success: false,
+        error: '未配置分类提示词',
+        message: '请先为任务选择分类并配置 AI 提示词',
+        needPrompt: true
+      })
+    }
+    
     // 构建 Prompt
-    const prompt = `请根据以下大纲撰写一篇文章：
+    let prompt = ''
+    
+    if (categoryPrompt) {
+      // 使用分类专用提示词
+      prompt = `${categoryPrompt}
+
+请根据以上要求，结合以下大纲撰写一篇文章：
+
+${taskTitle ? `标题：${taskTitle}` : ''}
+${taskDescription ? `描述：${taskDescription}` : ''}
+${categoryName ? `分类：${categoryName}` : ''}
+
+大纲：
+${outline.map((item, index) => `${index + 1}. ${item}`).join('\n')}
+
+要求：
+1. 文章风格：${style === 'casual' ? '轻松幽默' : style === 'formal' ? '正式专业' : '通俗易懂'}
+2. 字数：约${wordCount}字
+3. 语言：中文
+4. 结构清晰，每段有明确的主题
+5. 适当使用例子和比喻让内容更生动`
+    } else {
+      // 使用默认提示词
+      prompt = `请根据以下大纲撰写一篇文章：
 
 ${taskTitle ? `标题：${taskTitle}` : ''}
 ${taskDescription ? `描述：${taskDescription}` : ''}
@@ -135,11 +304,30 @@ ${outline.map((item, index) => `${index + 1}. ${item}`).join('\n')}
 4. 结构清晰，每段有明确的主题
 5. 适当使用例子和比喻让内容更生动
 6. 如果是技术文章，请提供实用的代码示例`
-
+    }
+    
+    // 获取用户的 AI 配置
+    const aiConfig = await prisma.aiConfig.findFirst({
+      where: {
+        userId: req.user.id,
+        provider: 'aliyun',
+        enabled: true
+      }
+    })
+    
+    if (!aiConfig || !aiConfig.apiKey) {
+      return res.status(400).json({
+        success: false,
+        error: '未配置阿里云 API Key，请先在 AI 配置页面设置'
+      })
+    }
+    
     // 调用 AI
     const article = await generateWithQwen(prompt, {
       temperature: 0.8,
-      maxTokens: 4000
+      maxTokens: 4000,
+      model: aiConfig.model || 'qwen3.5-plus',
+      apiKey: aiConfig.apiKey
     })
     
     // 更新任务状态

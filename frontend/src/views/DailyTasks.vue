@@ -3,22 +3,22 @@
     <!-- 侧边栏 -->
     <aside class="sidebar glass">
       <div class="logo">
-        <span class="logo-icon">📋</span>
+        <Icon name="clipboard" :size="32" />
         <span>TODO Platform</span>
       </div>
 
       <nav class="nav-section">
         <div class="nav-title">主要功能</div>
         <router-link to="/" class="nav-item">
-          <span class="nav-icon">🏠</span>
+          <Icon name="home" :size="20" />
           <span>仪表盘</span>
         </router-link>
         <router-link to="/daily" class="nav-item active">
-          <span class="nav-icon">📅</span>
+          <Icon name="calendar" :size="20" />
           <span>日常任务</span>
         </router-link>
         <router-link to="/creative" class="nav-item">
-          <span class="nav-icon">✍️</span>
+          <Icon name="edit" :size="20" />
           <span>创作任务</span>
         </router-link>
       </nav>
@@ -26,8 +26,20 @@
       <nav class="nav-section">
         <div class="nav-title">其他</div>
         <router-link to="/settings" class="nav-item">
-          <span class="nav-icon">⚙️</span>
+          <Icon name="settings" :size="20" />
           <span>设置</span>
+        </router-link>
+        <router-link to="/ai" class="nav-item">
+          <Icon name="sparkles" :size="20" />
+          <span>AI 配置</span>
+        </router-link>
+        <router-link to="/categories" class="nav-item">
+          <Icon name="tag" :size="20" />
+          <span>分类管理</span>
+        </router-link>
+        <router-link to="/category-prompts" class="nav-item">
+          <Icon name="file" :size="20" />
+          <span>分类提示词</span>
         </router-link>
       </nav>
     </aside>
@@ -37,9 +49,12 @@
       <!-- 头部 -->
       <header class="header glass">
         <div class="header-left">
-          <h1 class="page-title">📅 日常任务</h1>
+          <h1 class="page-title">
+            <Icon name="calendar" :size="24" style="vertical-align: middle; margin-right: 8px;" />
+            日常任务
+          </h1>
           <div class="search-box glass">
-            <span>🔍</span>
+            <Icon name="search" :size="18" />
             <input 
               v-model="searchQuery" 
               type="text" 
@@ -51,10 +66,10 @@
         </div>
         <div class="header-right">
           <button class="btn btn-glass" @click="refreshData" title="刷新">
-            🔄
+            <Icon name="refresh" :size="18" />
           </button>
           <button class="btn btn-primary" @click="showNewTaskModal = true">
-            <span>➕</span>
+            <Icon name="plus" :size="18" />
             <span>新建任务</span>
           </button>
         </div>
@@ -90,6 +105,16 @@
         </div>
 
         <div class="filter-group">
+          <label>分类</label>
+          <select v-model="filters.category" class="filter-select">
+            <option value="all">全部分类</option>
+            <option v-for="cat in dailyCategories" :key="cat.id" :value="cat.id">
+              {{ cat.icon }} {{ cat.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="filter-group">
           <label>优先级</label>
           <select v-model="filters.priority" class="filter-select">
             <option value="all">全部</option>
@@ -112,7 +137,7 @@
       <!-- 任务列表 -->
       <section class="tasks-section">
         <div v-if="loading" class="loading-state">
-          <div class="loading-spinner">⏳</div>
+          <Icon name="refresh" :size="48" class="loading-spinner" style="animation: spin 1s linear infinite;" />
           <p>加载中...</p>
         </div>
 
@@ -130,12 +155,12 @@
           >
             <div 
               class="task-checkbox" 
-              :class="{ checked: task.status === 'completed' }"
+              :class="{ checked: task.status === 'COMPLETED' }"
               @click="toggleTask(task)"
             ></div>
             
             <div class="task-content">
-              <div class="task-title" :class="{ completed: task.status === 'completed' }">
+              <div class="task-title" :class="{ completed: task.status === 'COMPLETED' }">
                 {{ task.title }}
               </div>
               <div v-if="task.description" class="task-description">
@@ -156,10 +181,10 @@
             
             <div class="task-actions">
               <button class="task-action-btn" @click="editTask(task)" title="编辑">
-                ✏️
+                <Icon name="pencil" :size="16" />
               </button>
               <button class="task-action-btn delete" @click="deleteTask(task)" title="删除">
-                🗑️
+                <Icon name="trash" :size="16" />
               </button>
             </div>
           </div>
@@ -235,24 +260,70 @@
         </div>
       </div>
     </div>
+    
+    <!-- 自定义消息提示 -->
+    <div v-if="showMessage" class="toast-container">
+      <div class="toast" :class="`toast-${messageType}`">
+        <Icon :name="messageType === 'success' ? 'check' : messageType === 'error' ? 'trash' : 'sparkles'" :size="20" />
+        <span>{{ messageText }}</span>
+      </div>
+    </div>
+    
+    <!-- 删除确认弹窗 -->
+    <div v-if="showDeleteModal" class="modal-overlay" @click="showDeleteModal = false">
+      <div class="modal glass-card" @click.stop>
+        <div class="modal-header">
+          <Icon name="trash" :size="24" style="color: #f45c43;" />
+          <h2>确认删除</h2>
+        </div>
+        <div class="modal-body">
+          <p>确定要删除任务 <strong>"{{ taskToDelete?.title }}"</strong> 吗？</p>
+          <p class="text-secondary" style="font-size: 0.875rem; margin-top: 8px;">
+            此操作不可恢复
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-glass" @click="showDeleteModal = false">取消</button>
+          <button class="btn btn-danger" @click="confirmDelete">删除</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useTaskStore, useAuthStore } from '@/stores'
+import Icon from '@/components/Icon.vue'
 
 const taskStore = useTaskStore()
 const authStore = useAuthStore()
 
+// 消息提示
+const showMessage = ref(false)
+const messageText = ref('')
+const messageType = ref('success')
+
+const showToast = (text, type = 'info') => {
+  messageText.value = text
+  messageType.value = type
+  showMessage.value = true
+  setTimeout(() => {
+    showMessage.value = false
+  }, 3000)
+}
+
 const loading = ref(false)
 const searchQuery = ref('')
 const showNewTaskModal = ref(false)
+const showDeleteModal = ref(false)
+const taskToDelete = ref(null)
 const editingTask = ref(null)
 
 const filters = ref({
   status: 'all',
   priority: 'all',
+  category: 'all',
   sortBy: 'createdAt'
 })
 
@@ -278,6 +349,11 @@ const filteredTasks = computed(() => {
   
   if (filters.value.priority !== 'all') {
     tasks = tasks.filter(t => t.priority === filters.value.priority)
+  }
+  
+  // 分类筛选
+  if (filters.value.category !== 'all') {
+    tasks = tasks.filter(t => t.categoryId === parseInt(filters.value.category))
   }
   
   // 搜索
@@ -306,14 +382,26 @@ const filteredTasks = computed(() => {
   return tasks
 })
 
-const dailyCategories = computed(() => {
-  // 这里可以从 store 获取分类，暂时硬编码
-  return [
-    { id: 1, name: '工作', icon: '💼' },
-    { id: 2, name: '家庭', icon: '🏠' },
-    { id: 3, name: '购物', icon: '🛒' }
-  ]
-})
+const dailyCategories = ref([])
+
+const fetchCategories = async () => {
+  try {
+    const token = localStorage.getItem('todo_token')
+    const response = await fetch('/api/categories', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    
+    const data = await response.json()
+    if (data.success) {
+      // 只保留日常任务分类
+      dailyCategories.value = data.data.filter(c => c.type === 'DAILY')
+    }
+  } catch (error) {
+    console.error('获取分类失败:', error)
+  }
+}
 
 const fetchTasks = async () => {
   loading.value = true
@@ -335,7 +423,10 @@ const handleSearch = () => {
 }
 
 const toggleTask = async (task) => {
+  console.log('切换任务状态:', task.id, task.title, '当前状态:', task.status)
   await taskStore.toggleTaskStatus(task.id)
+  console.log('任务状态已切换')
+  fetchTasks()  // 重新获取任务列表，确保数据同步
 }
 
 const editTask = (task) => {
@@ -350,32 +441,46 @@ const editTask = (task) => {
   showNewTaskModal.value = true
 }
 
-const deleteTask = async (task) => {
-  if (confirm(`确定要删除任务"${task.title}"吗？`)) {
-    await taskStore.deleteTask(task.id)
+const deleteTask = (task) => {
+  taskToDelete.value = task
+  showDeleteModal.value = true
+}
+
+const confirmDelete = async () => {
+  if (taskToDelete.value) {
+    await taskStore.deleteTask(taskToDelete.value.id)
+    showDeleteModal.value = false
+    taskToDelete.value = null
+    fetchTasks()
   }
 }
 
 const saveTask = async () => {
   try {
+    const taskData = {
+      ...newTask.value,
+      type: 'daily',  // 后端验证需要小写
+      priority: (newTask.value.priority || 'medium').toLowerCase(),  // 转为小写
+      categoryId: newTask.value.categoryId || null,  // 传 null 而不是 undefined
+      dueDate: newTask.value.dueDate ? new Date(newTask.value.dueDate).toISOString() : null
+    }
+    
+    console.log('创建任务数据:', taskData)
+    
     if (editingTask.value) {
-      await taskStore.updateTask(editingTask.value.id, {
-        ...newTask.value,
-        dueDate: newTask.value.dueDate ? new Date(newTask.value.dueDate).toISOString() : null
-      })
+      await taskStore.updateTask(editingTask.value.id, taskData)
     } else {
-      await taskStore.createTask({
-        ...newTask.value,
-        type: 'daily',
-        dueDate: newTask.value.dueDate ? new Date(newTask.value.dueDate).toISOString() : null
-      })
+      await taskStore.createTask(taskData)
     }
     
     showNewTaskModal.value = false
     resetForm()
     fetchTasks()
+    showToast('任务创建成功！', 'success')
   } catch (error) {
-    alert('保存失败：' + error.message)
+    console.error('保存任务失败:', error)
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || error.message
+    showToast('保存失败：' + errorMsg, 'error')
   }
 }
 
@@ -420,6 +525,7 @@ const priorityText = (priority) => {
 
 onMounted(() => {
   fetchTasks()
+  fetchCategories()
 })
 </script>
 
@@ -437,24 +543,28 @@ onMounted(() => {
   flex-direction: column;
   gap: 24px;
   border-right: 1px solid rgba(255, 255, 255, 0.2);
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px;
-  font-size: 1.5rem;
+  gap: 12px;
+  padding: 16px 12px;
+  font-size: 1.25rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--theme-secondary) 0%, var(--theme-accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  white-space: nowrap;
 }
 
-.logo-icon {
-  font-size: 2rem;
-  -webkit-text-fill-color: initial;
+.logo :deep(.icon) {
+  flex-shrink: 0;
 }
 
 .nav-section {
@@ -490,7 +600,7 @@ onMounted(() => {
 }
 
 .nav-item.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--theme-accent) 0%, var(--theme-secondary) 100%);
   color: #ffffff;
 }
 
@@ -566,7 +676,7 @@ onMounted(() => {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--theme-accent) 0%, var(--theme-secondary) 100%);
   color: #ffffff;
 }
 
@@ -627,7 +737,7 @@ onMounted(() => {
 
 .filter-btn.active {
   background: rgba(255, 255, 255, 0.2);
-  border-color: #667eea;
+  border-color: var(--theme-accent);
   color: #ffffff;
 }
 
@@ -678,7 +788,7 @@ onMounted(() => {
 }
 
 .task-checkbox:hover {
-  border-color: #667eea;
+  border-color: var(--theme-accent);
   background: rgba(102, 126, 234, 0.2);
 }
 
@@ -798,8 +908,12 @@ onMounted(() => {
 }
 
 .loading-spinner {
-  font-size: 3rem;
   margin-bottom: 16px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .empty-state-icon {
@@ -910,7 +1024,7 @@ onMounted(() => {
 
 .form-input:focus {
   background: rgba(255, 255, 255, 0.15);
-  border-color: #667eea;
+  border-color: var(--theme-accent);
 }
 
 .form-input::placeholder {
@@ -968,6 +1082,67 @@ select.form-input option {
   .task-actions {
     grid-column: 1 / -1;
     justify-content: flex-end;
+    opacity: 1;
+  }
+}
+
+/* 自定义消息提示 */
+.toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: rgba(15, 12, 41, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  animation: slideIn 0.3s ease;
+  min-width: 300px;
+}
+
+.toast-success {
+  border-color: rgba(56, 239, 125, 0.5);
+}
+
+.toast-success :deep(.icon) {
+  color: #38ef7d;
+}
+
+.toast-error {
+  border-color: rgba(244, 92, 67, 0.5);
+}
+
+.toast-error :deep(.icon) {
+  color: #f45c43;
+}
+
+.toast-info {
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.toast-info :deep(.icon) {
+  color: var(--theme-accent);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
     opacity: 1;
   }
 }

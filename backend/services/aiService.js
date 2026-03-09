@@ -11,57 +11,49 @@ async function generateWithQwen(prompt, options = {}) {
   const {
     temperature = 0.7,
     maxTokens = 2000,
-    model = process.env.ALIYUN_MODEL || 'qwen3.5-plus'
+    model = 'qwen3.5-plus',
+    apiKey
   } = options
-  
-  const apiKey = process.env.ALIYUN_API_KEY
   
   if (!apiKey) {
     throw new Error('未配置阿里云 API Key')
   }
   
   try {
-    // 阿里云百炼 API 端点（根据实际文档调整）
-    const url = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation'
+    // 阿里云百炼 API 端点（OpenAI 兼容模式）
+    const url = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions'
     
     const response = await axios.post(
       url,
       {
         model,
-        input: {
-          messages: [
-            {
-              role: 'system',
-              content: '你是一个专业的写作助手，擅长撰写各类文章。请用中文回复。'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ]
-        },
-        parameters: {
-          result_format: 'text',
-          temperature,
-          max_tokens: maxTokens
-        }
+        messages: [
+          {
+            role: 'system',
+            content: '你是一个专业的写作助手，擅长撰写各类文章。请用中文回复。'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature,
+        max_tokens: maxTokens
       },
       {
         headers: {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json'
         },
-        timeout: 30000 // 30 秒超时
+        timeout: 120000 // 120 秒超时（生成文章需要更长时间）
       }
     )
     
-    // 解析响应（根据实际 API 响应格式调整）
-    if (response.data && response.data.output && response.data.output.text) {
-      return response.data.output.text
-    } else if (response.data && response.data.choices && response.data.choices[0]) {
+    // 解析响应（OpenAI 兼容格式）
+    if (response.data && response.data.choices && response.data.choices[0] && response.data.choices[0].message) {
       return response.data.choices[0].message.content
     } else {
-      logger.warn('Qwen API 响应格式异常:', response.data)
+      logger.warn('AI API 响应格式异常:', response.data)
       throw new Error('AI 响应格式异常')
     }
   } catch (error) {

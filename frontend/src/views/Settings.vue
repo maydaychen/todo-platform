@@ -3,22 +3,22 @@
     <!-- 侧边栏 -->
     <aside class="sidebar glass">
       <div class="logo">
-        <span class="logo-icon">📋</span>
+        <Icon name="clipboard" :size="32" />
         <span>TODO Platform</span>
       </div>
 
       <nav class="nav-section">
         <div class="nav-title">主要功能</div>
         <router-link to="/" class="nav-item">
-          <span class="nav-icon">🏠</span>
+          <Icon name="home" :size="20" />
           <span>仪表盘</span>
         </router-link>
         <router-link to="/daily" class="nav-item">
-          <span class="nav-icon">📅</span>
+          <Icon name="calendar" :size="20" />
           <span>日常任务</span>
         </router-link>
         <router-link to="/creative" class="nav-item">
-          <span class="nav-icon">✍️</span>
+          <Icon name="edit" :size="20" />
           <span>创作任务</span>
         </router-link>
       </nav>
@@ -26,8 +26,20 @@
       <nav class="nav-section">
         <div class="nav-title">其他</div>
         <router-link to="/settings" class="nav-item active">
-          <span class="nav-icon">⚙️</span>
+          <Icon name="settings" :size="20" />
           <span>设置</span>
+        </router-link>
+        <router-link to="/ai" class="nav-item">
+          <Icon name="sparkles" :size="20" />
+          <span>AI 配置</span>
+        </router-link>
+        <router-link to="/categories" class="nav-item">
+          <Icon name="tag" :size="20" />
+          <span>分类管理</span>
+        </router-link>
+        <router-link to="/category-prompts" class="nav-item">
+          <Icon name="file" :size="20" />
+          <span>分类提示词</span>
         </router-link>
       </nav>
     </aside>
@@ -36,12 +48,18 @@
     <main class="main-content">
       <!-- 头部 -->
       <header class="header glass">
-        <h1 class="page-title">⚙️ 设置</h1>
+        <h1 class="page-title">
+          <Icon name="settings" :size="24" style="vertical-align: middle; margin-right: 8px;" />
+          设置
+        </h1>
       </header>
 
       <!-- 用户信息 -->
       <section class="settings-section">
-        <h2 class="section-title">👤 个人信息</h2>
+        <h2 class="section-title">
+          <Icon name="user" :size="20" style="vertical-align: middle; margin-right: 8px;" />
+          个人信息
+        </h2>
         <div class="settings-card glass-card">
           <div class="form-group">
             <label>用户名</label>
@@ -77,7 +95,10 @@
 
       <!-- 修改密码 -->
       <section class="settings-section">
-        <h2 class="section-title">🔒 修改密码</h2>
+        <h2 class="section-title">
+          <Icon name="lock" :size="20" style="vertical-align: middle; margin-right: 8px;" />
+          修改密码
+        </h2>
         <div class="settings-card glass-card">
           <div class="form-group">
             <label>当前密码</label>
@@ -125,7 +146,30 @@
 
       <!-- API Key 管理 -->
       <section class="settings-section">
-        <h2 class="section-title">🔑 API Key 管理</h2>
+        <h2 class="section-title">
+          <Icon name="key" :size="20" style="vertical-align: middle; margin-right: 8px;" />
+          API Key 管理
+        </h2>
+        <div class="settings-card glass-card">
+          <div class="setting-item">
+            <div class="setting-info">
+              <h3>🤖 AI 服务配置</h3>
+              <p>配置 AI 供应商（阿里云/小米/美团等），管理 API Key 和模型</p>
+            </div>
+            <router-link to="/ai" class="btn btn-primary">
+              <Icon name="sparkles" :size="18" style="margin-right: 8px;" />
+              AI 配置
+            </router-link>
+          </div>
+        </div>
+      </section>
+
+      <!-- API Key 管理 -->
+      <section class="settings-section">
+        <h2 class="section-title">
+          <Icon name="key" :size="20" style="vertical-align: middle; margin-right: 8px;" />
+          API Key 管理
+        </h2>
         <div class="settings-card glass-card">
           <p class="section-desc">
             API Key 用于通过 API 调用 TODO Platform，请妥善保管，不要泄露给他人。
@@ -135,7 +179,7 @@
           <div class="api-key-section">
             <h3 style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
               ✍️ 创作平台专用
-              <span class="badge" style="font-size: 11px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2px 8px; border-radius: 12px;">推荐</span>
+              <span class="badge" style="font-size: 11px; background: linear-gradient(135deg, var(--theme-accent) 0%, var(--theme-secondary) 100%); padding: 2px 8px; border-radius: 12px;">推荐</span>
             </h3>
             <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 16px;">
               专门为创作平台生成的 API Key，用于 AI 内容生成
@@ -218,7 +262,10 @@ console.log(article.data.content)</code></pre>
 
       <!-- 数据管理 -->
       <section class="settings-section">
-        <h2 class="section-title">💾 数据管理</h2>
+        <h2 class="section-title">
+          <Icon name="database" :size="20" style="vertical-align: middle; margin-right: 8px;" />
+          数据管理
+        </h2>
         <div class="settings-card glass-card">
           <div class="setting-item">
             <div class="setting-info">
@@ -249,12 +296,21 @@ console.log(article.data.content)</code></pre>
             <h3>退出登录</h3>
             <p>退出当前账号，返回登录页面</p>
             <button class="btn btn-danger" @click="logout">
-              🚪 退出登录
+              <Icon name="logout" :size="18" style="vertical-align: middle; margin-right: 8px;" />
+              退出登录
             </button>
           </div>
         </div>
       </section>
     </main>
+    
+    <!-- 自定义消息提示 -->
+    <div v-if="showMessage" class="toast-container">
+      <div class="toast" :class="`toast-${messageType}`">
+        <Icon :name="messageType === 'success' ? 'check' : messageType === 'error' ? 'trash' : 'sparkles'" :size="20" />
+        <span>{{ messageText }}</span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -262,10 +318,25 @@ console.log(article.data.content)</code></pre>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore, useTaskStore } from '@/stores'
+import Icon from '@/components/Icon.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const taskStore = useTaskStore()
+
+// 消息提示
+const showMessage = ref(false)
+const messageText = ref('')
+const messageType = ref('success')
+
+const showToast = (text, type = 'info') => {
+  messageText.value = text
+  messageType.value = type
+  showMessage.value = true
+  setTimeout(() => {
+    showMessage.value = false
+  }, 3000)
+}
 
 const user = ref({
   username: '',
@@ -300,8 +371,27 @@ const fetchUserInfo = async () => {
   }
 }
 
-const fetchApiKey = () => {
-  apiKey.value = authStore.apiKey || localStorage.getItem('todo_api_key') || ''
+const fetchApiKey = async () => {
+  try {
+    const token = localStorage.getItem('todo_token')
+    const response = await fetch('/api/auth/api-keys', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    
+    const data = await response.json()
+    if (data.success && data.data.length > 0) {
+      // 获取第一个 API Key（明文）
+      apiKey.value = data.data[0].key
+      // 保存到 localStorage，供 axios 使用
+      localStorage.setItem('todo_api_key', apiKey.value)
+    }
+  } catch (error) {
+    console.error('获取 API Key 失败:', error)
+  }
+  
+  // 创作平台专用 Key 从 localStorage 读取
   creationApiKey.value = localStorage.getItem('todo_creation_api_key') || ''
 }
 
@@ -342,11 +432,17 @@ const changePassword = async () => {
 
 const generateApiKey = async () => {
   try {
-    await authStore.generateApiKey()
-    apiKey.value = authStore.apiKey
-    alert('API Key 生成成功！请妥善保管。')
+    const result = await authStore.generateApiKey()
+    apiKey.value = result?.data?.apiKey || authStore.apiKey || ''
+    if (!apiKey.value) {
+      showToast('生成失败：API Key 为空', 'error')
+      return
+    }
+    // 保存到 localStorage，供 axios 使用
+    localStorage.setItem('todo_api_key', apiKey.value)
+    showToast('API Key 生成成功！请妥善保管。', 'success')
   } catch (error) {
-    alert('生成失败：' + error.message)
+    showToast('生成失败：' + error.message, 'error')
   }
 }
 
@@ -394,7 +490,7 @@ const revokeApiKey = async () => {
 const copyApiKey = (key) => {
   if (key) {
     navigator.clipboard.writeText(key)
-    alert('API Key 已复制到剪贴板')
+    showToast('API Key 已复制到剪贴板', 'success')
   }
 }
 
@@ -472,24 +568,28 @@ onMounted(() => {
   flex-direction: column;
   gap: 24px;
   border-right: 1px solid rgba(255, 255, 255, 0.2);
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px;
-  font-size: 1.5rem;
+  gap: 12px;
+  padding: 16px 12px;
+  font-size: 1.25rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--theme-secondary) 0%, var(--theme-accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  white-space: nowrap;
 }
 
-.logo-icon {
-  font-size: 2rem;
-  -webkit-text-fill-color: initial;
+.logo :deep(.icon) {
+  flex-shrink: 0;
 }
 
 .nav-section {
@@ -525,7 +625,7 @@ onMounted(() => {
 }
 
 .nav-item.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--theme-accent) 0%, var(--theme-secondary) 100%);
   color: #ffffff;
 }
 
@@ -627,7 +727,7 @@ onMounted(() => {
 
 .form-input:focus {
   background: rgba(255, 255, 255, 0.15);
-  border-color: #667eea;
+  border-color: var(--theme-accent);
 }
 
 .form-input:disabled {
@@ -650,7 +750,7 @@ onMounted(() => {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--theme-accent) 0%, var(--theme-secondary) 100%);
   color: #ffffff;
   align-self: flex-start;
 }
@@ -801,6 +901,67 @@ onMounted(() => {
 
   .api-key-display {
     flex-direction: column;
+  }
+}
+
+/* 自定义消息提示 */
+.toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: rgba(15, 12, 41, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  animation: slideIn 0.3s ease;
+  min-width: 300px;
+}
+
+.toast-success {
+  border-color: rgba(56, 239, 125, 0.5);
+}
+
+.toast-success :deep(.icon) {
+  color: #38ef7d;
+}
+
+.toast-error {
+  border-color: rgba(244, 92, 67, 0.5);
+}
+
+.toast-error :deep(.icon) {
+  color: #f45c43;
+}
+
+.toast-info {
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.toast-info :deep(.icon) {
+  color: var(--theme-accent);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
   }
 }
 </style>

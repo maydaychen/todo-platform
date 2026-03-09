@@ -3,19 +3,20 @@ const router = express.Router()
 const { z } = require('zod')
 const { prisma } = require('../config/db')
 const logger = require('../utils/logger')
-const { authenticateToken } = require('../middleware/auth')
+const { authenticateToken, validateApiKey, optionalAuth } = require('../middleware/auth')
 
-// 所有任务路由都需要认证
-router.use(authenticateToken)
+// 所有任务路由都需要认证（支持 JWT 或 API Key）
+router.use(optionalAuth)
 
 // 验证 Schema
 const createTaskSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(2000).optional(),
-  type: z.enum(['daily', 'creative']),
-  dueDate: z.string().datetime().optional(),
+  type: z.enum(['daily', 'creative', 'DAILY', 'CREATIVE']).transform(val => val.toUpperCase()),
+  status: z.enum(['pending', 'in_progress', 'completed', 'archived']).optional(),
+  dueDate: z.string().datetime().optional().nullable(),
   priority: z.enum(['low', 'medium', 'high']).default('medium'),
-  categoryId: z.number().optional(),
+  categoryId: z.number().optional().nullable(),
   tags: z.array(z.string()).optional(),
   metadata: z.record(z.any()).optional() // 创作任务专用
 })
@@ -47,15 +48,15 @@ router.get('/', async (req, res) => {
     }
     
     if (type && type !== 'all') {
-      where.type = type
+      where.type = type.toUpperCase()  // 转换为大写
     }
     
     if (status && status !== 'all') {
-      where.status = status
+      where.status = status.toUpperCase()  // 转换为大写
     }
     
     if (priority && priority !== 'all') {
-      where.priority = priority
+      where.priority = priority.toUpperCase()  // 转换为大写
     }
     
     if (category && category !== 'all') {
@@ -152,15 +153,34 @@ router.get('/:id', async (req, res) => {
  */
 router.post('/', async (req, res) => {
   try {
+    console.log('创建任务 - 接收的数据:', req.body)
     const data = createTaskSchema.parse(req.body)
+    console.log('验证通过的数据:', data)
+    
+    // 如果没有传递 categoryId，使用默认分组
+    let categoryId = data.categoryId
+    if (!categoryId) {
+      // 查找用户的默认分组
+      const defaultCategory = await prisma.category.findFirst({
+        where: {
+          userId: req.user.id,
+          type: data.type.toUpperCase()
+        },
+        orderBy: { createdAt: 'asc' }  // 使用最早创建的分组作为默认
+      })
+      categoryId = defaultCategory ? defaultCategory.id : null
+    }
     
     const task = await prisma.task.create({
       data: {
         ...data,
         userId: req.user.id,
-        status: 'pending',
+        type: data.type.toUpperCase(),  // 转换为大写存入数据库
+        priority: data.priority.toUpperCase(),  // 转换为大写
+        status: 'PENDING',
         tags: data.tags ? JSON.stringify(data.tags) : null,
-        metadata: data.metadata ? JSON.stringify(data.metadata) : null
+        metadata: data.metadata ? JSON.stringify(data.metadata) : null,
+        categoryId: categoryId
       },
       include: {
         category: true
@@ -175,6 +195,7 @@ router.post('/', async (req, res) => {
       message: '任务创建成功'
     })
   } catch (error) {
+    console.error('创建任务失败:', error)
     if (error instanceof z.ZodError) {
       return res.status(400).json({ 
         success: false, 
@@ -186,7 +207,7 @@ router.post('/', async (req, res) => {
     logger.error('创建任务失败:', error)
     res.status(500).json({ 
       success: false, 
-      error: '服务器内部错误' 
+      error: error.message 
     })
   }
 })
@@ -217,16 +238,33 @@ router.put('/:id', async (req, res) => {
     }
     
     // 更新任务
+    const updateData = {
+      ...data,
+      tags: data.tags ? JSON.stringify(data.tags) : undefined,
+      metadata: data.metadata ? JSON.stringify(data.metadata) : undefined,
+      completedAt: data.status === 'completed' && existingTask.status !== 'completed' 
+        ? new Date() 
+        : undefined
+    }
+    
+    // 如果 status 存在，转换为大写
+    if (data.status) {
+      updateData.status = data.status.toUpperCase()
+    }
+    
+    // 如果 type 存在，转换为大写
+    if (data.type) {
+      updateData.type = data.type.toUpperCase()
+    }
+    
+    // 如果 priority 存在，转换为大写
+    if (data.priority) {
+      updateData.priority = data.priority.toUpperCase()
+    }
+    
     const task = await prisma.task.update({
       where: { id: parseInt(id) },
-      data: {
-        ...data,
-        tags: data.tags ? JSON.stringify(data.tags) : undefined,
-        metadata: data.metadata ? JSON.stringify(data.metadata) : undefined,
-        completedAt: data.status === 'completed' && existingTask.status !== 'completed' 
-          ? new Date() 
-          : undefined
-      },
+      data: updateData,
       include: {
         category: true
       }

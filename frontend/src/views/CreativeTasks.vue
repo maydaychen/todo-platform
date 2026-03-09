@@ -3,22 +3,22 @@
     <!-- 侧边栏 -->
     <aside class="sidebar glass">
       <div class="logo">
-        <span class="logo-icon">📋</span>
+        <Icon name="clipboard" :size="32" />
         <span>TODO Platform</span>
       </div>
 
       <nav class="nav-section">
         <div class="nav-title">主要功能</div>
         <router-link to="/" class="nav-item">
-          <span class="nav-icon">🏠</span>
+          <Icon name="home" :size="20" />
           <span>仪表盘</span>
         </router-link>
         <router-link to="/daily" class="nav-item">
-          <span class="nav-icon">📅</span>
+          <Icon name="calendar" :size="20" />
           <span>日常任务</span>
         </router-link>
         <router-link to="/creative" class="nav-item active">
-          <span class="nav-icon">✍️</span>
+          <Icon name="edit" :size="20" />
           <span>创作任务</span>
         </router-link>
       </nav>
@@ -26,8 +26,20 @@
       <nav class="nav-section">
         <div class="nav-title">其他</div>
         <router-link to="/settings" class="nav-item">
-          <span class="nav-icon">⚙️</span>
+          <Icon name="settings" :size="20" />
           <span>设置</span>
+        </router-link>
+        <router-link to="/ai" class="nav-item">
+          <Icon name="sparkles" :size="20" />
+          <span>AI 配置</span>
+        </router-link>
+        <router-link to="/categories" class="nav-item">
+          <Icon name="tag" :size="20" />
+          <span>分类管理</span>
+        </router-link>
+        <router-link to="/category-prompts" class="nav-item">
+          <Icon name="file" :size="20" />
+          <span>分类提示词</span>
         </router-link>
       </nav>
     </aside>
@@ -37,9 +49,12 @@
       <!-- 头部 -->
       <header class="header glass">
         <div class="header-left">
-          <h1 class="page-title">✍️ 创作任务</h1>
+          <h1 class="page-title">
+            <Icon name="edit" :size="24" style="vertical-align: middle; margin-right: 8px;" />
+            创作任务
+          </h1>
           <div class="search-box glass">
-            <span>🔍</span>
+            <Icon name="search" :size="18" />
             <input 
               v-model="searchQuery" 
               type="text" 
@@ -51,10 +66,10 @@
         </div>
         <div class="header-right">
           <button class="btn btn-glass" @click="refreshData" title="刷新">
-            🔄
+            <Icon name="refresh" :size="18" />
           </button>
           <button class="btn btn-primary" @click="showNewTaskModal = true">
-            <span>➕</span>
+            <Icon name="plus" :size="18" />
             <span>新建创作</span>
           </button>
         </div>
@@ -62,52 +77,66 @@
 
       <!-- 状态筛选 -->
       <section class="status-tabs glass-card">
-        <button 
-          class="status-tab" 
-          :class="{ active: statusFilter === 'all' }"
-          @click="statusFilter = 'all'"
-        >
-          全部
-        </button>
-        <button 
-          class="status-tab" 
-          :class="{ active: statusFilter === 'idea' }"
-          @click="statusFilter = 'idea'"
-        >
-          💡 灵感
-        </button>
-        <button 
-          class="status-tab" 
-          :class="{ active: statusFilter === 'outline' }"
-          @click="statusFilter = 'outline'"
-        >
-          📝 大纲
-        </button>
-        <button 
-          class="status-tab" 
-          :class="{ active: statusFilter === 'draft' }"
-          @click="statusFilter = 'draft'"
-        >
-          📄 草稿
-        </button>
-        <button 
-          class="status-tab" 
-          :class="{ active: statusFilter === 'done' }"
-          @click="statusFilter = 'done'"
-        >
-          ✅ 完成
-        </button>
+        <div class="status-tabs-left">
+          <button 
+            class="status-tab" 
+            :class="{ active: statusFilter === 'all' }"
+            @click="statusFilter = 'all'"
+          >
+            全部
+          </button>
+          <button 
+            class="status-tab" 
+            :class="{ active: statusFilter === 'idea' }"
+            @click="statusFilter = 'idea'"
+          >
+            <Icon name="lightbulb" :size="16" style="vertical-align: middle; margin-right: 4px;" />
+            灵感
+          </button>
+          <button 
+            class="status-tab" 
+            :class="{ active: statusFilter === 'outline' }"
+            @click="statusFilter = 'outline'"
+          >
+            <Icon name="clipboard" :size="16" style="vertical-align: middle; margin-right: 4px;" />
+            大纲
+          </button>
+          <button 
+            class="status-tab" 
+            :class="{ active: statusFilter === 'draft' }"
+            @click="statusFilter = 'draft'"
+          >
+            <Icon name="file" :size="16" style="vertical-align: middle; margin-right: 4px;" />
+            草稿
+          </button>
+          <button 
+            class="status-tab" 
+            :class="{ active: statusFilter === 'done' }"
+            @click="statusFilter = 'done'"
+          >
+            <Icon name="check" :size="16" style="vertical-align: middle; margin-right: 4px;" />
+            完成
+          </button>
+        </div>
+        <div class="category-filter">
+          <select v-model="categoryFilter" class="filter-select">
+            <option value="all">全部分类</option>
+            <option v-for="cat in creativeCategories" :key="cat.id" :value="cat.id">
+              {{ cat.icon }} {{ cat.name }}
+            </option>
+          </select>
+        </div>
       </section>
 
       <!-- 任务列表 -->
       <section class="tasks-section">
         <div v-if="loading" class="loading-state">
-          <div class="loading-spinner">⏳</div>
+          <Icon name="refresh" :size="48" class="loading-spinner" style="animation: spin 1s linear infinite;" />
           <p>加载中...</p>
         </div>
 
         <div v-else-if="filteredTasks.length === 0" class="empty-state">
-          <div class="empty-state-icon">✍️</div>
+          <Icon name="edit" :size="64" class="empty-state-icon" />
           <div class="empty-state-title">还没有创作任务</div>
           <p>点击"新建创作"开始你的第一个创作项目吧！</p>
         </div>
@@ -120,18 +149,35 @@
           >
             <div class="task-content">
               <div class="task-header">
-                <div class="task-title">{{ task.title }}</div>
-                <div class="task-status" :class="`status-${getTaskStatus(task)}`">
-                  {{ statusText(getTaskStatus(task)) }}
+                <div class="task-title-left">
+                  <div class="task-title">{{ task.title }}</div>
+                  <div class="task-description" v-if="task.description">
+                    {{ task.description }}
+                  </div>
+                </div>
+                <div class="task-header-right">
+                  <span class="task-status" :class="`status-${getTaskStatus(task)}`">
+                    {{ statusText(getTaskStatus(task)) }}
+                  </span>
+                  <div class="task-actions">
+                    <button class="task-action-btn" @click="editTask(task)" title="编辑">
+                      <Icon name="pencil" :size="16" />
+                    </button>
+                    <button class="task-action-btn ai-btn" @click="showGenerateModal(task)" title="AI 生成">
+                      <Icon name="cloud" :size="16" />
+                    </button>
+                    <button class="task-action-btn delete" @click="deleteTask(task)" title="删除">
+                      <Icon name="trash" :size="16" />
+                    </button>
+                  </div>
                 </div>
               </div>
               
-              <div v-if="task.description" class="task-description">
-                {{ task.description }}
-              </div>
-              
               <div v-if="hasOutline(task)" class="outline-preview">
-                <div class="outline-label">📋 大纲</div>
+                <div class="outline-label">
+                  <Icon name="clipboard" :size="14" style="vertical-align: middle; margin-right: 4px;" />
+                  大纲
+                </div>
                 <div class="outline-items">
                   <span 
                     v-for="(item, index) in getOutline(task)" 
@@ -145,28 +191,13 @@
               
               <div class="task-meta">
                 <span class="task-tag">
-                  📝 {{ task.category?.name || '未分类' }}
+                  <Icon name="tag" :size="14" style="vertical-align: middle; margin-right: 4px;" />
+                  {{ task.category?.name || '未分类' }}
                 </span>
                 <span class="task-date">
-                  📅 创建于 {{ formatDate(task.createdAt) }}
+                  创建于 {{ formatDate(task.createdAt) }}
                 </span>
               </div>
-            </div>
-            
-            <div class="task-actions">
-              <button class="task-action-btn" @click="editTask(task)" title="编辑">
-                ✏️
-              </button>
-              <button 
-                class="task-action-btn ai-btn" 
-                @click="showGenerateModal(task)" 
-                title="AI 生成"
-              >
-                ✨
-              </button>
-              <button class="task-action-btn delete" @click="deleteTask(task)" title="删除">
-                🗑️
-              </button>
             </div>
           </div>
         </div>
@@ -177,7 +208,7 @@
     <div v-if="showGenerate" class="modal-overlay" @click="showGenerate = false">
       <div class="modal glass" @click.stop>
         <div class="modal-header">
-          <h2>✨ AI 辅助创作</h2>
+          <h2><Icon name="sparkles" :size="20" style="vertical-align: middle; margin-right: 8px;" />AI 辅助创作</h2>
           <button class="modal-close" @click="showGenerate = false">×</button>
         </div>
         
@@ -188,7 +219,9 @@
               @click="generateOutline"
               :disabled="generating"
             >
-              <div class="option-icon">📝</div>
+              <div class="option-icon">
+                <Icon name="clipboard" :size="32" />
+              </div>
               <div class="option-title">生成大纲</div>
               <div class="option-desc">根据标题自动生成文章大纲</div>
             </button>
@@ -198,7 +231,9 @@
               @click="generateArticle"
               :disabled="generating || !hasOutline(selectedTask)"
             >
-              <div class="option-icon">📄</div>
+              <div class="option-icon">
+                <Icon name="file" :size="32" />
+              </div>
               <div class="option-title">生成全文</div>
               <div class="option-desc">根据大纲生成完整文章</div>
             </button>
@@ -222,6 +257,12 @@
           <div v-if="generatedContent" class="generated-content">
             <h3>生成结果</h3>
             <div class="content-preview">{{ generatedContent }}</div>
+            <div class="export-actions">
+              <button class="btn btn-primary" @click="exportToNAS" :disabled="exporting">
+                <Icon name="download" :size="16" />
+                {{ exporting ? '导出中...' : '导出到 NAS' }}
+              </button>
+            </div>
           </div>
         </div>
         
@@ -279,12 +320,41 @@
         </div>
       </div>
     </div>
+    
+    <!-- 删除确认弹窗 -->
+    <div v-if="showDeleteModal" class="modal-overlay" @click="showDeleteModal = false">
+      <div class="modal glass-card" @click.stop>
+        <div class="modal-header">
+          <Icon name="trash" :size="24" style="color: #f45c43;" />
+          <h2>确认删除</h2>
+        </div>
+        <div class="modal-body">
+          <p>确定要删除任务 <strong>"{{ taskToDelete?.title }}"</strong> 吗？</p>
+          <p class="text-secondary" style="font-size: 0.875rem; margin-top: 8px;">
+            此操作不可恢复
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-glass" @click="showDeleteModal = false">取消</button>
+          <button class="btn btn-danger" @click="confirmDelete">删除</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 自定义消息提示 -->
+    <div v-if="showMessage" class="toast-container">
+      <div class="toast" :class="`toast-${messageType}`">
+        <Icon :name="messageType === 'success' ? 'check' : messageType === 'error' ? 'trash' : 'sparkles'" :size="20" />
+        <span>{{ messageText }}</span>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useTaskStore, useAuthStore } from '@/stores'
+import Icon from '@/components/Icon.vue'
 
 const taskStore = useTaskStore()
 const authStore = useAuthStore()
@@ -292,12 +362,31 @@ const authStore = useAuthStore()
 const loading = ref(false)
 const searchQuery = ref('')
 const statusFilter = ref('all')
+const categoryFilter = ref('all')
 const showNewTaskModal = ref(false)
+const showDeleteModal = ref(false)
+const taskToDelete = ref(null)
 const editingTask = ref(null)
 const showGenerate = ref(false)
 const selectedTask = ref(null)
 const generating = ref(false)
 const generatedContent = ref('')
+const exporting = ref(false)
+const fullGeneratedArticle = ref('')
+
+// Toast 消息提示
+const showMessage = ref(false)
+const messageText = ref('')
+const messageType = ref('success')
+
+const showToast = (text, type = 'info') => {
+  messageText.value = text
+  messageType.value = type
+  showMessage.value = true
+  setTimeout(() => {
+    showMessage.value = false
+  }, 3000)
+}
 
 const newTask = ref({
   title: '',
@@ -305,12 +394,26 @@ const newTask = ref({
   categoryId: null
 })
 
-const creativeCategories = computed(() => {
-  return [
-    { id: 4, name: '技术博客', icon: '📝' },
-    { id: 5, name: '生活记录', icon: '📔' }
-  ]
-})
+const creativeCategories = ref([])
+
+const fetchCategories = async () => {
+  try {
+    const token = localStorage.getItem('todo_token')
+    const response = await fetch('/api/categories', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    
+    const data = await response.json()
+    if (data.success) {
+      // 只保留创作任务分类
+      creativeCategories.value = data.data.filter(c => c.type === 'CREATIVE')
+    }
+  } catch (error) {
+    console.error('获取分类失败:', error)
+  }
+}
 
 const filteredTasks = computed(() => {
   let tasks = taskStore.creativeTasks
@@ -318,6 +421,11 @@ const filteredTasks = computed(() => {
   // 状态筛选
   if (statusFilter.value !== 'all') {
     tasks = tasks.filter(t => getTaskStatus(t) === statusFilter.value)
+  }
+  
+  // 分类筛选
+  if (categoryFilter.value !== 'all') {
+    tasks = tasks.filter(t => t.categoryId === parseInt(categoryFilter.value))
   }
   
   // 搜索
@@ -341,17 +449,17 @@ const getTaskStatus = (task) => {
     } catch {}
   }
   
-  if (task.status === 'completed') return 'done'
+  if (task.status === 'COMPLETED') return 'done'
   if (task.status === 'in_progress') return 'draft'
   return 'idea'
 }
 
 const statusText = (status) => {
   const map = {
-    idea: '💡 灵感',
-    outline: '📝 大纲',
-    draft: '📄 草稿',
-    done: '✅ 完成'
+    idea: '灵感',
+    outline: '大纲',
+    draft: '草稿',
+    done: '完成'
   }
   return map[status] || status
 }
@@ -409,9 +517,20 @@ const editTask = (task) => {
   showNewTaskModal.value = true
 }
 
-const deleteTask = async (task) => {
-  if (confirm(`确定要删除"${task.title}"吗？`)) {
-    await taskStore.deleteTask(task.id)
+const deleteTask = (task) => {
+  console.log('删除任务 - CreativeTasks:', task.id, task.title)
+  console.log('当前 showDeleteModal:', showDeleteModal.value)
+  taskToDelete.value = task
+  showDeleteModal.value = true
+  console.log('设置后 showDeleteModal:', showDeleteModal.value)
+}
+
+const confirmDelete = async () => {
+  if (taskToDelete.value) {
+    await taskStore.deleteTask(taskToDelete.value.id)
+    showDeleteModal.value = false
+    taskToDelete.value = null
+    fetchTasks()
   }
 }
 
@@ -422,7 +541,7 @@ const saveTask = async () => {
     } else {
       await taskStore.createTask({
         ...newTask.value,
-        type: 'creative'
+        type: 'creative'  // 小写，后端会转换为大写存入数据库
       })
     }
     
@@ -448,12 +567,14 @@ const generateOutline = async () => {
   try {
     const result = await taskStore.generateOutline(
       selectedTask.value.id,
-      selectedTask.value.title
+      selectedTask.value.title,
+      selectedTask.value.categoryId
     )
     generatedContent.value = '大纲生成成功！\n\n' + result.outline.join('\n')
     fetchTasks()
   } catch (error) {
-    alert('生成失败：' + error.message)
+    console.error('生成大纲失败:', error)
+    showToast('生成失败：' + error.message, 'error')
   } finally {
     generating.value = false
   }
@@ -467,14 +588,51 @@ const generateArticle = async () => {
     const outline = getOutline(selectedTask.value)
     const result = await taskStore.generateArticle(
       selectedTask.value.id,
-      outline
+      outline,
+      'casual',
+      selectedTask.value.categoryId
     )
     generatedContent.value = result.content.substring(0, 500) + '...'
+    fullGeneratedArticle.value = result.content
     fetchTasks()
   } catch (error) {
-    alert('生成失败：' + error.message)
+    console.error('生成文章失败:', error)
+    showToast('生成失败：' + error.message, 'error')
   } finally {
     generating.value = false
+  }
+}
+
+const exportToNAS = async () => {
+  if (!selectedTask.value || !fullGeneratedArticle.value) return
+  
+  exporting.value = true
+  try {
+    const token = localStorage.getItem('todo_token')
+    const response = await fetch('/api/export-nas/nas', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        taskId: selectedTask.value.id,
+        title: selectedTask.value.title,
+        content: fullGeneratedArticle.value
+      })
+    })
+    
+    const data = await response.json()
+    if (data.success) {
+      showToast(`文章已导出到 NAS：${data.data.filename}`, 'success')
+    } else {
+      showToast('导出失败：' + data.error, 'error')
+    }
+  } catch (error) {
+    console.error('导出到 NAS 失败:', error)
+    showToast('导出失败：' + error.message, 'error')
+  } finally {
+    exporting.value = false
   }
 }
 
@@ -484,6 +642,7 @@ const expandContent = async () => {
 
 onMounted(() => {
   fetchTasks()
+  fetchCategories()
 })
 </script>
 
@@ -501,30 +660,94 @@ onMounted(() => {
   /* 样式从 DailyTasks 继承 */
 }
 
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal {
+  width: 90%;
+  max-width: 500px;
+  padding: 0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-body p {
+  margin: 0 0 16px 0;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.modal-body .text-secondary {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.875rem;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 .sidebar {
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 24px;
   border-right: 1px solid rgba(255, 255, 255, 0.2);
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px;
-  font-size: 1.5rem;
+  gap: 12px;
+  padding: 16px 12px;
+  font-size: 1.25rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--theme-secondary) 0%, var(--theme-accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  white-space: nowrap;
 }
 
-.logo-icon {
-  font-size: 2rem;
-  -webkit-text-fill-color: initial;
+.logo :deep(.icon) {
+  flex-shrink: 0;
 }
 
 .nav-section {
@@ -560,7 +783,7 @@ onMounted(() => {
 }
 
 .nav-item.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--theme-accent) 0%, var(--theme-secondary) 100%);
   color: #ffffff;
 }
 
@@ -636,7 +859,7 @@ onMounted(() => {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--theme-accent) 0%, var(--theme-secondary) 100%);
   color: #ffffff;
 }
 
@@ -659,8 +882,47 @@ onMounted(() => {
 .status-tabs {
   padding: 16px 24px;
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.status-tabs-left {
+  display: flex;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.category-filter {
+  flex-shrink: 0;
+}
+
+.filter-select {
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.filter-select:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.filter-select:focus {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--theme-accent);
+}
+
+.filter-select option {
+  background: #1a1a2e;
+  color: #ffffff;
 }
 
 .status-tab {
@@ -681,23 +943,30 @@ onMounted(() => {
 
 .status-tab.active {
   background: rgba(102, 126, 234, 0.2);
-  border-color: #667eea;
+  border-color: var(--theme-accent);
   color: #ffffff;
+}
+
+/* 任务列表 */
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 /* 任务卡片 */
 .task-card {
-  padding: 24px;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 24px;
-  align-items: start;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .task-content {
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+  flex: 1;
 }
 
 .task-header {
@@ -705,11 +974,40 @@ onMounted(() => {
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
+  width: 100%;
+}
+
+.task-title-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .task-title {
   font-size: 1.1rem;
   font-weight: 600;
+  line-height: 1.4;
+}
+
+.task-description {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+}
+
+.task-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .task-status {
@@ -722,7 +1020,7 @@ onMounted(() => {
 
 .status-idea {
   background: rgba(102, 126, 234, 0.2);
-  color: #667eea;
+  color: var(--theme-accent);
 }
 
 .status-outline {
@@ -774,20 +1072,32 @@ onMounted(() => {
 
 .task-meta {
   display: flex;
-  gap: 16px;
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.5);
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.task-tag, .task-date {
+.task-tag, .task-status, .task-date {
   display: flex;
   align-items: center;
   gap: 4px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  height: 40px;
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
 }
 
 .task-actions {
   display: flex;
   gap: 8px;
+  align-items: flex-start;
+  flex-shrink: 0;
 }
 
 .task-action-btn {
@@ -812,7 +1122,7 @@ onMounted(() => {
 
 .task-action-btn.ai-btn:hover {
   background: rgba(102, 126, 234, 0.3);
-  color: #667eea;
+  color: var(--theme-accent);
 }
 
 .task-action-btn.delete:hover {
@@ -840,7 +1150,7 @@ onMounted(() => {
 
 .generate-option:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.1);
-  border-color: #667eea;
+  border-color: var(--theme-accent);
   transform: translateY(-2px);
 }
 
@@ -927,6 +1237,67 @@ onMounted(() => {
 
   .generate-options {
     grid-template-columns: 1fr;
+  }
+}
+
+/* 自定义消息提示 */
+.toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: rgba(15, 12, 41, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  animation: slideIn 0.3s ease;
+  min-width: 300px;
+}
+
+.toast-success {
+  border-color: rgba(56, 239, 125, 0.5);
+}
+
+.toast-success :deep(.icon) {
+  color: #38ef7d;
+}
+
+.toast-error {
+  border-color: rgba(244, 92, 67, 0.5);
+}
+
+.toast-error :deep(.icon) {
+  color: #f45c43;
+}
+
+.toast-info {
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.toast-info :deep(.icon) {
+  color: var(--theme-accent);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
   }
 }
 </style>

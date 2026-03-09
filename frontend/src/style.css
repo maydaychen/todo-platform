@@ -344,6 +344,10 @@ select.form-input option {
   }
 }
 
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .fade-in {
   animation: fadeIn 0.3s ease;
 }

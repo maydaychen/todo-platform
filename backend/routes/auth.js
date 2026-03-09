@@ -193,6 +193,43 @@ router.post('/api-key', authenticateToken, async (req, res) => {
 })
 
 /**
+ * GET /api/auth/api-keys
+ * 获取当前用户的所有 API Keys
+ */
+router.get('/api-keys', authenticateToken, async (req, res) => {
+  try {
+    const apiKeys = await prisma.apiKey.findMany({
+      where: {
+        userId: req.user.id,
+        revoked: false
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      select: {
+        id: true,
+        key: true,
+        name: true,
+        createdAt: true,
+        lastUsedAt: true
+      }
+    })
+    
+    // 返回明文 API Key（内部调用不需要脱敏）
+    res.json({
+      success: true,
+      data: apiKeys
+    })
+  } catch (error) {
+    logger.error('获取 API Keys 失败:', error)
+    res.status(500).json({
+      success: false,
+      error: error.message
+    })
+  }
+})
+
+/**
  * GET /api/auth/me
  * 获取当前用户信息
  */

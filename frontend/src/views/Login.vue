@@ -3,7 +3,7 @@
     <div class="login-box glass">
       <div class="login-header">
         <div class="logo">
-          <span class="logo-icon">📋</span>
+          <Icon name="clipboard" :size="40" />
           <h1>TODO Platform</h1>
         </div>
         <p class="subtitle">任务管理平台</p>
@@ -13,7 +13,7 @@
         <div class="form-group">
           <label>用户名</label>
           <div class="input-wrapper">
-            <span class="input-icon">👤</span>
+            <Icon name="user" :size="20" class="input-icon" />
             <input 
               v-model="username" 
               type="text" 
@@ -28,7 +28,7 @@
         <div class="form-group">
           <label>密码</label>
           <div class="input-wrapper">
-            <span class="input-icon">🔒</span>
+            <Icon name="lock" :size="20" class="input-icon" />
             <input 
               v-model="password" 
               type="password" 
@@ -52,16 +52,19 @@
           class="btn btn-primary btn-block"
           :disabled="loading"
         >
-          <span v-if="loading">⏳ 登录中...</span>
-          <span v-else>🚀 登录</span>
+          <Icon v-if="loading" name="clock" :size="18" style="vertical-align: middle; margin-right: 8px;" />
+          <Icon v-else name="rocket" :size="18" style="vertical-align: middle; margin-right: 8px;" />
+          <span v-if="loading">登录中...</span>
+          <span v-else>登录</span>
         </button>
 
         <div v-if="error" class="error-message">
-          ❌ {{ error }}
+          <Icon name="trash" :size="16" style="vertical-align: middle; margin-right: 8px;" />
+          {{ error }}
         </div>
 
         <div class="demo-info">
-          <p>💡 默认账号：</p>
+          <p><Icon name="lightbulb" :size="16" style="vertical-align: middle; margin-right: 4px;" /> 默认账号：</p>
           <code>maydaychen / Admin@123456</code>
         </div>
       </form>
@@ -73,6 +76,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores'
+import Icon from '@/components/Icon.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()

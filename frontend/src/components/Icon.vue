@@ -156,6 +156,17 @@
     <circle v-if="name === 'palette'" cx="7" cy="7" r="1.5"/>
     <circle v-if="name === 'palette'" cx="5" cy="12" r="1.5"/>
     <circle v-if="name === 'palette'" cx="7" cy="17" r="1.5"/>
+    
+    <!-- 云朵/AI -->
+    <path v-if="name === 'cloud'" d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+    
+    <!-- 眼睛 -->
+    <path v-if="name === 'eye'" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+    <circle v-if="name === 'eye'" cx="12" cy="12" r="3"/>
+    
+    <!-- 眼睛关闭 -->
+    <path v-if="name === 'eye-off'" d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.51 18.51 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+    <line v-if="name === 'eye-off'" x1="1" y1="1" x2="23" y2="23"/>
   </svg>
 </template>
 
