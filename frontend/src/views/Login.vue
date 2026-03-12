@@ -62,11 +62,6 @@
           <Icon name="trash" :size="16" style="vertical-align: middle; margin-right: 8px;" />
           {{ error }}
         </div>
-
-        <div class="demo-info">
-          <p><Icon name="lightbulb" :size="16" style="vertical-align: middle; margin-right: 4px;" /> 账号：</p>
-          <code>maydaychen / gjy!MVX!mcx.etb7vwe</code>
-        </div>
       </form>
     </div>
   </div>
