@@ -1,0 +1,17 @@
+[Unit]
+Description=TODO Platform
+After=network.target mariadb.service
+
+[Service]
+Type=simple
+User=chenyi
+WorkingDirectory=/home/chenyi/.openclaw/workspace/projects/todo-platform/backend
+Environment="DASHSCOPE_API_KEY=sk-3b5e8629bf8f4fc2b18bfdac4783fdd1"
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=10
+StandardOutput=append:/home/chenyi/.openclaw/workspace/projects/todo-platform/backend.log
+StandardError=append:/home/chenyi/.openclaw/workspace/projects/todo-platform/backend.log
+
+[Install]
+WantedBy=multi-user.target

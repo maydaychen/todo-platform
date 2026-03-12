@@ -13,7 +13,7 @@
 ### 1. 安装依赖
 
 ```bash
-cd /home/chenyi/.openclaw/workspace/projects/todo-platform
+cd ~/workspace/projects/todo-platform
 npm install
 ```
 
@@ -223,7 +223,7 @@ npx prisma db push         # 推送数据库结构
 
 ```bash
 # 检查数据库连接
-cd /home/chenyi/.openclaw/workspace/projects/todo-platform
+cd ~/workspace/projects/todo-platform
 node -e "require('dotenv').config(); console.log(process.env.DATABASE_URL)"
 ```
 

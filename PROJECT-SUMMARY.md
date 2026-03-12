@@ -156,7 +156,7 @@ projects/todo-platform/
 ### 1. 启动服务
 
 ```bash
-cd /home/chenyi/.openclaw/workspace/projects/todo-platform
+cd ~/workspace/projects/todo-platform
 npm start
 ```
 

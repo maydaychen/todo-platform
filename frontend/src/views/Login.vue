@@ -64,8 +64,8 @@
         </div>
 
         <div class="demo-info">
-          <p><Icon name="lightbulb" :size="16" style="vertical-align: middle; margin-right: 4px;" /> 默认账号：</p>
-          <code>maydaychen / Admin@123456</code>
+          <p><Icon name="lightbulb" :size="16" style="vertical-align: middle; margin-right: 4px;" /> 账号：</p>
+          <code>maydaychen / gjy!MVX!mcx.etb7vwe</code>
         </div>
       </form>
     </div>

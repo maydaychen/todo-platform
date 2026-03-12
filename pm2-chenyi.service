@@ -1,0 +1,20 @@
+[Unit]
+Description=PM2 process manager for TODO Platform
+Documentation=https://pm2.keymetrics.io/docs/usage/quick-start/
+After=network.target mariadb.service
+
+[Service]
+Type=forking
+User=chenyi
+LimitNOFILE=infinity
+LimitNPROC=infinity
+LimitCORE=infinity
+Environment=PATH=/usr/bin:/usr/local/bin:/home/chenyi/.npm-global/bin:/bin:/usr/bin:/sbin:/usr/sbin
+Environment=PM2_HOME=/home/chenyi/.pm2
+PIDFile=/home/chenyi/.pm2/pm2.pid
+ExecStart=/home/chenyi/.npm-global/lib/node_modules/pm2/bin/pm2 resurrect
+ExecReload=/home/chenyi/.npm-global/lib/node_modules/pm2/bin/pm2 reload all
+ExecStop=/home/chenyi/.npm-global/lib/node_modules/pm2/bin/pm2 kill
+
+[Install]
+WantedBy=multi-user.target
